@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net40;net45;netstandard1.6</TargetFrameworks>
+    <AssemblyName>cn.jpush.api.core</AssemblyName>
 	<Version>3.0.8</Version>
   </PropertyGroup>
 
