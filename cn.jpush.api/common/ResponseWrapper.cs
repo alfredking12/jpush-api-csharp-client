@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.Serialization.Json;
 using System.Net;
 using cn.jpush.api.util;
 using System.Diagnostics;
@@ -71,7 +70,11 @@ namespace cn.jpush.api.common
             }
             catch(Exception e)
             {
+#if COREFX
+                Debug.WriteLine(e.Message);
+#else
                 Debug.Print(e.Message);
+#endif
             }
         }
 

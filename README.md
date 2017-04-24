@@ -8,6 +8,8 @@
 ## 支持版本
 Microsoft. NET Framework 4.0 （包括）以上版本
 
+.net standard 1.6 （包括）以上版本
+
 ## 环境配置
 在 [jpush-api-csharp-client](https://github.com/jpush/jpush-api-csharp-client) 项目根目录可以下载下面的两个文件。
 

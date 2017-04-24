@@ -1,15 +1,9 @@
-﻿using cn.jpush.api.common;
+﻿using cn.jpush.api.common.resp;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
-using System.IO;
 using System.Diagnostics;
-using Newtonsoft.Json;
-using cn.jpush.api.common.resp;
+using System.IO;
+using System.Net;
+using System.Text;
 
 namespace cn.jpush.api.common
 {
@@ -70,7 +64,11 @@ namespace cn.jpush.api.common
                 //request类型
                 myReq.Method = method;
                 myReq.ContentType = "application/json";
+#if !COREFX
                 myReq.KeepAlive = false;
+#else
+                myReq.Headers[HttpRequestHeader.KeepAlive] = "false";
+#endif
                 //auth是否为null或者空
                 if ( !String.IsNullOrEmpty(auth) )
                 {
@@ -81,11 +79,18 @@ namespace cn.jpush.api.common
                 {
                     //utf8编码
                     byte[] bs = UTF8Encoding.UTF8.GetBytes(reqParams);
+#if !COREFX
                     myReq.ContentLength = bs.Length;
+#else
+                    myReq.Headers[HttpRequestHeader.ContentLength] = bs.Length.ToString();
+#endif
+                    
                     using (Stream reqStream = myReq.GetRequestStream())
                     {
                         reqStream.Write(bs, 0, bs.Length);
+#if !COREFX
                         reqStream.Close();
+#endif
                     }
                 }
 
@@ -93,11 +98,17 @@ namespace cn.jpush.api.common
                 {
                     //utf8编码
                     byte[] bs = UTF8Encoding.UTF8.GetBytes(reqParams);
+#if !COREFX
                     myReq.ContentLength = bs.Length;
+#else
+                    myReq.Headers[HttpRequestHeader.ContentLength] = bs.Length.ToString();
+#endif
                     using (Stream reqStream = myReq.GetRequestStream())
                     {
                         reqStream.Write(bs, 0, bs.Length);
+#if !COREFX
                         reqStream.Close();
+#endif
                     }
                 }
 
@@ -112,9 +123,15 @@ namespace cn.jpush.api.common
                     {
                         result.responseContent = reader.ReadToEnd();
                     }
+#if !COREFX
                     String limitQuota = response.GetResponseHeader(RATE_LIMIT_QUOTA);
                     String limitRemaining = response.GetResponseHeader(RATE_LIMIT_Remaining);
                     String limitReset = response.GetResponseHeader(RATE_LIMIT_Reset);
+#else
+                    String limitQuota = response.Headers[RATE_LIMIT_QUOTA];
+                    String limitRemaining = response.Headers[RATE_LIMIT_Remaining];
+                    String limitReset = response.Headers[RATE_LIMIT_Reset];
+#endif
                     result.setRateLimit(limitQuota, limitRemaining, limitReset);
                     Console.WriteLine("Succeed to get response - 200 OK" +" "+ DateTime.Now);
                     Console.WriteLine("Response Content - {0}", result.responseContent +" "+ DateTime.Now);
@@ -133,11 +150,24 @@ namespace cn.jpush.api.common
                     }
                     result.responseCode = errorCode;
                     result.exceptionString = e.Message;
-                    String limitQuota = ((HttpWebResponse)e.Response).GetResponseHeader(RATE_LIMIT_QUOTA);
-                    String limitRemaining = ((HttpWebResponse)e.Response).GetResponseHeader(RATE_LIMIT_Remaining);
-                    String limitReset = ((HttpWebResponse)e.Response).GetResponseHeader(RATE_LIMIT_Reset);
+
+#if !COREFX
+                    String limitQuota = response.GetResponseHeader(RATE_LIMIT_QUOTA);
+                    String limitRemaining = response.GetResponseHeader(RATE_LIMIT_Remaining);
+                    String limitReset = response.GetResponseHeader(RATE_LIMIT_Reset);
+#else
+                    String limitQuota = response.Headers[RATE_LIMIT_QUOTA];
+                    String limitRemaining = response.Headers[RATE_LIMIT_Remaining];
+                    String limitReset = response.Headers[RATE_LIMIT_Reset];
+#endif
                     result.setRateLimit(limitQuota, limitRemaining, limitReset);
+
+#if COREFX
+                    Debug.WriteLine(e.Message);
+#else
                     Debug.Print(e.Message);
+#endif
+
                     result.setErrorObject();
                     Console.WriteLine(string.Format("fail  to get response - {0}", errorCode) + " "+ DateTime.Now);
                     Console.WriteLine(string.Format("Response Content - {0}", result.responseContent) + " "+ DateTime.Now);
@@ -162,15 +192,20 @@ namespace cn.jpush.api.common
             {
                 if (response != null)
                 {
-                    response.Close();                
+#if !COREFX
+                    response.Close();
+#endif
+
+#if !NET40
+                    response.Dispose();
+#endif
                 }
-                if(myReq != null)
+                if (myReq != null)
                 {
                     myReq.Abort();
                 }            
             }
             return result;
         }
-
     }
 }
